@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Reflection;
 
 namespace SalesIntegrator.Utils
@@ -28,8 +29,11 @@ namespace SalesIntegrator.Utils
 
         public static IDictionary<string, Type> GetSubiektTypes()
         {
-            var insertAssembly = Assembly.LoadFile(@"C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\Interop.InsERT4\v4.0_1.0.0.0__a59bfa3a209beb60\Interop.InsERT4.dll");
-            var adoAssembly = Assembly.LoadFile(@"C:\WINDOWS\assembly\GAC\ADODB\7.0.3300.0__b03f5f7f11d50a3a\ADODB.dll");
+            string assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string insertAssemblyPath = Path.Combine(assemblyFolder, "Interop.InsERT4.dll");
+            string adoAssemblyPath = Path.Combine(assemblyFolder, "ADODB.dll");
+            var insertAssembly = Assembly.LoadFile(insertAssemblyPath);
+            var adoAssembly = Assembly.LoadFile(adoAssemblyPath);
             var types = new Dictionary<string, Type>();
             types.Add("KontrahentJednorazowy", insertAssembly.GetType("InsERT.KontrahentJednorazowy"));
             types.Add("SuDokument", insertAssembly.GetType("InsERT.SuDokument"));

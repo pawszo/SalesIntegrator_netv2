@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.IO;
 using SalesIntegrator.Utils;
 using SalesIntegrator.Interfaces;
+using System.Reflection;
 
 namespace SalesIntegrator
 {
