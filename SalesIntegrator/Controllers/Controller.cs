@@ -1,5 +1,7 @@
-﻿using SalesIntegrator.Models;
+﻿using SalesIntegrator.Interfaces;
+using SalesIntegrator.Models;
 using SalesIntegrator.Services;
+using SalesIntegrator.Utils;
 using SalesIntegrator.Views;
 using System;
 using System.Collections.Generic;
@@ -13,25 +15,24 @@ namespace SalesIntegrator.Controllers
     public sealed class Controller : IController
     {
 
-        private readonly IBaseLinkerService _baselinkerService;
+        private readonly IOrderService _baselinkerService;
         private readonly IDataService _dataService;
 
         private delegate DialogResult SafeCallDelegate();
         public IEnumerable<Order> ReceivedOrders { get; set; }
 
         public Form Window { get; set; }
-        public Form LogConsole { get; set; }
 
 
 
 
-        public Controller(IDataService dataService, IBaseLinkerService baselinkerService)
+        public Controller(IDataService dataService, IOrderService baselinkerService)
         {
             _dataService = dataService;
             _baselinkerService = baselinkerService;
         }
 
-        public async Task GetOrders(OrderInput orderInput)
+        public async Task<IEnumerable<Order>> GetOrders(OrderInput orderInput)
         {
             var newOrders = await _baselinkerService.GetOrders(orderInput);
             if (newOrders.Count() == 0)
@@ -40,7 +41,7 @@ namespace SalesIntegrator.Controllers
             }
             else
             {
-                var orders = _dataService.Orders;
+                var orders = new List<Order>(_dataService.Orders);
                 orders.AddRange(newOrders.Where(p => !orders.Contains(p)));
 
 
@@ -49,7 +50,9 @@ namespace SalesIntegrator.Controllers
                     NonBlockingConsole.WriteLine($"Downloaded new order: id {order.order_id}, user {order.user_login}");
                 }
             }
-            ReceivedOrders = newOrders;
+            //ReceivedOrders = newOrders;
+            return newOrders;
+
         }
 
 

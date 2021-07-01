@@ -15,32 +15,36 @@ namespace SalesIntegrator.Views
 {
     public partial class LoginForm : Form
     {
+        private InsertUserModel _insertUser;
+        private DBConnectionModel _dbUser;
 
-
-        public LoginForm()
-        {
+        public LoginForm(DBConnectionModel dbUser, InsertUserModel insertUser)
+        { 
             InitializeComponent();
+            _insertUser = insertUser;
+            _dbUser = dbUser;
 
         }
+
 
         private void Start(object sender, EventArgs e)
         {
-            Program.DBUser = GetConnectionModel();
-            Program.InsertUser = GetInsertUserModel();
+            GetConnectionModel();
+            GetInsertUserModel();
             this.Close();           
         }
 
-        public DBConnectionModel GetConnectionModel()
+        public void GetConnectionModel()
         {
-            return new DBConnectionModel(
+            _dbUser.SetFields(
                 serverTextBox.Text,
                 dbTextBox.Text,
                 usernameTextBox.Text,
                 passwordTextBox.Text);
         }
-        public InsertUserModel GetInsertUserModel()
+        public void GetInsertUserModel()
         {
-            return new InsertUserModel(insertUserTextBox.Text, insertUserPasswordTextBox.Text);
+            _insertUser.SetFields(insertUserTextBox.Text, insertUserPasswordTextBox.Text);
         }
     }
 }

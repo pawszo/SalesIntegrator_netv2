@@ -4,14 +4,13 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace SalesIntegrator.Controllers
+namespace SalesIntegrator.Interfaces
 {
-    public interface IController
+    public interface IController : IOrderService
     {
         Form Window { get; set; }
-        Form LogConsole { get; set; }
 
-        Task GetOrders(OrderInput orderInput);
+        //Task<IEnumerable<Order>> GetOrders(OrderInput orderInput);
         void Initialize();
         IEnumerable<Order> ReceivedOrders { get; set; }
         IDataService GetDataService();

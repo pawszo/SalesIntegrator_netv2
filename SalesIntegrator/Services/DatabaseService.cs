@@ -1,20 +1,25 @@
 ﻿using InsERT;
+using SalesIntegrator.Interfaces;
 using SalesIntegrator.Utils;
 using System;
 using System.Collections.Generic;
 
 namespace SalesIntegrator.Services
 {
-    public class DatabaseService
+    public class DatabaseService : IDatabaseService
     {
         private Subiekt _subiekt;
         private ADODB.Connection _connection;
         private IDictionary<string, Type> _types;
-        public DatabaseService(Subiekt subiekt, IDictionary<string, Type> types)
+
+        public DatabaseService()
+        {
+            _types = Constants.GetSubiektTypes();
+        }
+        public void Initialize(Subiekt subiekt)
         {
             _subiekt = subiekt;
-            _types = types;
-            _connection = subiekt.Baza.Polaczenie;
+            _connection = _subiekt.Baza.Polaczenie;
         }
 
         public int GetAttributeId(string columnValue,string columnName ,string tableName, string idColumnName)

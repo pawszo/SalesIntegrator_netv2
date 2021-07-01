@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net.Mail;
 using System.Windows.Forms;
 using Convert = SalesIntegrator.Utils.Convert;
+using SalesIntegrator.Interfaces;
 
 namespace SalesIntegrator.Views
 {
@@ -51,7 +52,7 @@ namespace SalesIntegrator.Views
                 return;
             }
 
-            await _controller.GetOrders(orderInput);
+            _dataService.Orders = await _controller.GetOrders(orderInput);
             this.getOrdersButton.BackColor = Color.Green;
             }
             catch

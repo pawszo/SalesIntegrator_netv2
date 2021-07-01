@@ -1,14 +1,12 @@
 ﻿using SalesIntegrator.Models;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace SalesIntegrator.Services
+namespace SalesIntegrator.Interfaces
 {
-    public interface IBaseLinkerService
+    public interface IOrderService
     {
         Task<IEnumerable<Order>> GetOrders(OrderInput input);
-        Task<dynamic> GetOrdersResult(OrderInput input);
     }
 }

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SalesIntegrator.Services
+namespace SalesIntegrator.Interfaces
 {
     public interface ISubiektService
     {
@@ -13,8 +13,7 @@ namespace SalesIntegrator.Services
         SuDokument DodajZamowienie(Order order, KontrahentJednorazowy kontrahent);
         KontrahentJednorazowy DodajKontrahenta(Order order);
         void StartSubiekt(DBConnectionModel dbUser, InsertUserModel insertUser);
-        void PassOrders(IEnumerable<Order> newOrders);
-        void ProcessOrders();
+        void ProcessOrders(IEnumerable<Order> newOrders);
 
     }
 }

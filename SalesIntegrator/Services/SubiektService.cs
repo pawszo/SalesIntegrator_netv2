@@ -1,20 +1,11 @@
 ﻿using InsERT;
-using SalesIntegrator.Controllers;
+using SalesIntegrator.Interfaces;
 using SalesIntegrator.Models;
 using SalesIntegrator.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Convert = SalesIntegrator.Utils.Convert;
-using System.Data;
-using SalesIntegrator.Services;
-using System.Runtime.InteropServices;
-using MDFLib;
-using System.Diagnostics;
-using System.Dynamic;
-using Newtonsoft.Json;
+
 using System.Reflection;
 
 namespace SalesIntegrator.Services
@@ -22,36 +13,17 @@ namespace SalesIntegrator.Services
     public class SubiektService : ISubiektService
     {
         private Subiekt _subiekt;
-        private IEnumerable<Order> _orders;
         private IDictionary<string, Type> _subiektTypes;
-        private DatabaseService _dbService;
+        private readonly IDatabaseService _dbService;
 
-        public SubiektService()
+        public SubiektService(IDatabaseService dbService)
         {
-            _subiektTypes = GetSubiektTypes();
+            _subiektTypes = Constants.GetSubiektTypes();
+            _dbService = dbService;
+
         }
 
-        private IDictionary<string, Type> GetSubiektTypes()
-        {
-            var insertAssembly = Assembly.LoadFile(@"C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\Interop.InsERT4\v4.0_1.0.0.0__a59bfa3a209beb60\Interop.InsERT4.dll");
-            var adoAssembly = Assembly.LoadFile(@"C:\WINDOWS\assembly\GAC\ADODB\7.0.3300.0__b03f5f7f11d50a3a\ADODB.dll");
-            var types = new Dictionary<string, Type>();
-            types.Add("KontrahentJednorazowy", insertAssembly.GetType("InsERT.KontrahentJednorazowy"));
-            types.Add("SuDokument", insertAssembly.GetType("InsERT.SuDokument"));
-            types.Add("Towar", insertAssembly.GetType("InsERT.Towar"));
-            types.Add("SuPozycjeVat", insertAssembly.GetType("InsERT.SuPozycjeVat"));
-            types.Add("Baza", insertAssembly.GetType("InsERT.BazaClass"));
-            types.Add("Connection", adoAssembly.GetType("ADODB.Connection"));
-            types.Add("Subiekt", insertAssembly.GetType("InsERT.Subiekt"));
-            types.Add("Recordset", adoAssembly.GetType("ADODB.Recordset"));
-            types.Add("Fields", adoAssembly.GetType("ADODB.Fields"));
-            types.Add("Field", adoAssembly.GetType("ADODB.Field"));
-            types.Add("_Recordset", adoAssembly.GetType("ADODB._Recordset"));
-            types.Add("InternalFields", adoAssembly.GetType("ADODB.InternalFields"));
-            types.Add("SuPozycje", insertAssembly.GetType("InsERT.SuPozycje"));
-            types.Add("SuPozycja", insertAssembly.GetType("InsERT.SuPozycja"));
-            return types;
-        }
+        
 
         public void CloseSubiekt()
         {
@@ -81,7 +53,7 @@ namespace SalesIntegrator.Services
 
                 int vatId = _dbService.GetAttributeId($"{prod.tax_rate}", "vat_Stawka", "sl_StawkaVAT", "vat_Id");
                 COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "VatId", vatId);
-                var nettoPrice = SalesIntegrator.Utils.Convert.GetNettoPrice(prod.price_brutto, prod.tax_rate);
+                var nettoPrice = Convert.GetNettoPrice(prod.price_brutto, prod.tax_rate);
                 COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "CenaNettoPrzedRabatem", nettoPrice);
                 COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "CenaNettoPoRabacie", nettoPrice);
                 COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "CenaBruttoPrzedRabatem", nettoPrice);
@@ -90,7 +62,7 @@ namespace SalesIntegrator.Services
                 COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "WartoscBruttoPoRabacie", prod.price_brutto * (float)prod.quantity);
                 COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "WartoscNettoPrzedRabatem", nettoPrice * (float)prod.quantity);
                 COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "WartoscNettoPoRabacie", nettoPrice * (float)prod.quantity);
-                var vatValue = SalesIntegrator.Utils.Convert.GetVATPrice(nettoPrice * (float)prod.quantity, prod.tax_rate);
+                var vatValue = Convert.GetVATPrice(nettoPrice * (float)prod.quantity, prod.tax_rate);
                 COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "Jm", prod.sku);
                 COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "RabatProcent", 0);
                 NonBlockingConsole.WriteLine($"Added product {prod.name}");
@@ -167,22 +139,18 @@ namespace SalesIntegrator.Services
                 (Int32)UruchomDopasujEnum.gtaUruchomDopasuj,
                 (Int32)UruchomEnum.gtaUruchomNieArchiwizujPrzyZamykaniu);
             _subiekt.Okno.Widoczne = true;
-            _dbService = new DatabaseService(_subiekt, GetSubiektTypes());
+            _dbService.Initialize(_subiekt);
 
         }
 
-        public void ProcessOrders()
+        public void ProcessOrders(IEnumerable<Order> orders)
         {
-            foreach(var order in _orders)
+            foreach(var order in orders)
             {
                 EnterData(order);
                 NonBlockingConsole.WriteLine($"Order {order.order_id} registered successfully.");
             }
         }
 
-        public void PassOrders(IEnumerable<Order> newOrders)
-        {
-            _orders = newOrders;
-        }
     }
 }
