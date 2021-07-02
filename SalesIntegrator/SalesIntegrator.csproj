@@ -108,6 +108,10 @@
     <Compile Include="Models\OrderInput.cs" />
     <Compile Include="Models\OrderResult.cs" />
     <Compile Include="Models\Product.cs" />
+    <Compile Include="Order.cs" />
+    <Compile Include="OrderInput.cs" />
+    <Compile Include="OrderResult.cs" />
+    <Compile Include="Product.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\DatabaseService.cs" />
@@ -206,6 +210,9 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="NewFolder1\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
