@@ -1,13 +1,14 @@
-﻿using SalesIntegrator.Services;
+﻿using SalesIntegrator.Service;
+using SalesIntegrator.Controller;
 using System;
-using SalesIntegrator.Models;
+using SalesIntegrator.Model;
 using Microsoft.Extensions.DependencyInjection;
-using SalesIntegrator.Views;
-using SalesIntegrator.Controllers;
+using SalesIntegrator.View;
+using SalesIntegrator.Controller.Interface;
 using System.Runtime.InteropServices;
 using System.IO;
 using SalesIntegrator.Utils;
-using SalesIntegrator.Interfaces;
+using SalesIntegrator.Service.Interface;
 using System.Reflection;
 
 namespace SalesIntegrator
@@ -90,8 +91,8 @@ namespace SalesIntegrator
 
         private static readonly ServiceProvider _serviceProvider =
             new ServiceCollection()
-            .AddSingleton<IOrderService, BaselinkerService>()
-            .AddSingleton<IController, Controller>()
+            .AddSingleton<IAPIService, BaselinkerService>()
+            .AddSingleton<IController, Controller.Controller>()
             .AddSingleton<IDataService, DataService>()
             .AddSingleton<ISubiektService, SubiektService>()
             .AddSingleton<IDatabaseService, DatabaseService>()

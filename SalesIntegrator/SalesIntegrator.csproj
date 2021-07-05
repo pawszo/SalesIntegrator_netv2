@@ -99,44 +99,71 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controllers\Controller.cs" />
-    <Compile Include="Interfaces\IController.cs" />
-    <Compile Include="Interfaces\IDatabaseService.cs" />
-    <Compile Include="Models\DBConnectionModel.cs" />
-    <Compile Include="Models\InsertUserModel.cs" />
-    <Compile Include="Models\Order.cs" />
-    <Compile Include="Models\OrderInput.cs" />
-    <Compile Include="Models\OrderResult.cs" />
-    <Compile Include="Models\Product.cs" />
-    <Compile Include="Order.cs" />
-    <Compile Include="OrderInput.cs" />
-    <Compile Include="OrderResult.cs" />
-    <Compile Include="Product.cs" />
+    <Compile Include="Controller\Controller.cs" />
+    <Compile Include="Dto\Baselinker\OrderDto.cs" />
+    <Compile Include="Dto\Baselinker\OrderInputDto.cs" />
+    <Compile Include="Dto\Baselinker\OrderResultDto.cs" />
+    <Compile Include="Dto\Baselinker\ProductDto.cs" />
+    <Compile Include="Dto\Interface\IOrderInputDto.cs" />
+    <Compile Include="Dto\Interface\IOrderResultDto.cs" />
+    <Compile Include="Dto\Interface\IProductDto.cs" />
+    <Compile Include="Dto\Interface\ISubiektCollection.cs" />
+    <Compile Include="Dto\Interface\ISubiektDto.cs" />
+    <Compile Include="Dto\Subiekt\AplikacjaDto.cs" />
+    <Compile Include="Dto\Subiekt\GridEdycyjnyDto.cs" />
+    <Compile Include="Dto\Subiekt\KhRachunkiDto.cs" />
+    <Compile Include="Dto\Subiekt\KhTelefonyDto.cs" />
+    <Compile Include="Dto\Subiekt\KontrahentJednorazowyDto.cs" />
+    <Compile Include="Controller\Interface\IController.cs" />
+    <Compile Include="Dto\Subiekt\PrzedplatyDto.cs" />
+    <Compile Include="Dto\Subiekt\SuBrakiDto.cs" />
+    <Compile Include="Dto\Subiekt\SuDokPromocjeDto.cs" />
+    <Compile Include="Dto\Subiekt\SuDokumentDto.cs" />
+    <Compile Include="Dto\Subiekt\SuPozycjaDto.cs" />
+    <Compile Include="Dto\Subiekt\SuPozycjeDto.cs" />
+    <Compile Include="Dto\Subiekt\SuPozycjeFunduszePromocjiDto.cs" />
+    <Compile Include="Dto\Subiekt\SuPozycjeNiezgodnosciFMDto.cs" />
+    <Compile Include="Dto\Subiekt\SuPozycjeVatDto.cs" />
+    <Compile Include="Dto\Subiekt\WiadomoscDto.cs" />
+    <Compile Include="Mapper\BaselinkerMapper.cs" />
+    <Compile Include="Mapper\Interface\IMapper.cs" />
+    <Compile Include="Mapper\IProductResultDto.cs" />
+    <Compile Include="Mapper\SubiektMapper.cs" />
+    <Compile Include="Model\Interface\IModel.cs" />
+    <Compile Include="Model\Order.cs" />
+    <Compile Include="Model\OrderInput.cs" />
+    <Compile Include="Model\OrderResult.cs" />
+    <Compile Include="Model\Product.cs" />
+    <Compile Include="Service\Interface\IDatabaseService.cs" />
+    <Compile Include="Dto\Interface\IDto.cs" />
+    <Compile Include="Dto\Interface\IOrderDto.cs" />
+    <Compile Include="Model\DBConnectionModel.cs" />
+    <Compile Include="Model\InsertUserModel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\DatabaseService.cs" />
-    <Compile Include="Interfaces\IDataService.cs" />
-    <Compile Include="Services\DataService.cs" />
-    <Compile Include="Services\BaselinkerService.cs" />
-    <Compile Include="Interfaces\IOrderService.cs" />
-    <Compile Include="Interfaces\ISubiektService.cs" />
-    <Compile Include="Services\SubiektService.cs" />
+    <Compile Include="Service\DatabaseService.cs" />
+    <Compile Include="Service\Interface\IDataService.cs" />
+    <Compile Include="Service\DataService.cs" />
+    <Compile Include="Service\BaselinkerService.cs" />
+    <Compile Include="Service\Interface\IAPIService.cs" />
+    <Compile Include="Service\Interface\ISubiektService.cs" />
+    <Compile Include="Service\SubiektService.cs" />
     <Compile Include="Utils\Constants.cs" />
     <Compile Include="Utils\Convert.cs" />
     <Compile Include="Utils\JsonUtils.cs" />
     <Compile Include="Utils\NonBlockingConsole.cs" />
     <Compile Include="Utils\RegexHelper.cs" />
     <Compile Include="Utils\COMHelper.cs" />
-    <Compile Include="Views\LoginForm.cs">
+    <Compile Include="View\LoginForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Views\LoginForm.Designer.cs">
+    <Compile Include="View\LoginForm.Designer.cs">
       <DependentUpon>LoginForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Views\Window.cs">
+    <Compile Include="View\Window.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Views\Window.Designer.cs" />
+    <Compile Include="View\Window.Designer.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -146,10 +173,10 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="Views\LoginForm.resx">
+    <EmbeddedResource Include="View\LoginForm.resx">
       <DependentUpon>LoginForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Views\Window.resx" />
+    <EmbeddedResource Include="View\Window.resx" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -211,8 +238,6 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="NewFolder1\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

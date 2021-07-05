@@ -1,4 +1,4 @@
-﻿using SalesIntegrator.Models;
+﻿using SalesIntegrator.Model;
 using System;
 using System.Globalization;
 using System.Linq;
