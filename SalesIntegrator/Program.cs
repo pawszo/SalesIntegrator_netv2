@@ -19,15 +19,16 @@ namespace SalesIntegrator
     {
         private readonly IController _controller;
 
-        public static FileStream FileStream;
-        public static StreamWriter StreamWriter;
+        private static FileStream FileStream;
+        private static StreamWriter StreamWriter;
+        private static int ConsoleVisibility;
 
         [DllImport("kernel32.dll")]
         static extern IntPtr GetConsoleWindow();
 
         [DllImport("user32.dll")]
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-        static int ConsoleVisibility;
+        
 
         public Program(IController controller)
         {
@@ -36,26 +37,31 @@ namespace SalesIntegrator
 
         static void StartConsole()
         {
-            NonBlockingConsole.WriteLine("Press key to select logging type: f - log to file; c - log to console;");
-            char key = Console.ReadKey().KeyChar;
-            ConsoleVisibility = Constants.CONSOLE_DISPLAY;
-            if (key == 'F' || key == 'f')
+            while (true)
             {
-                string directory = string.Empty;
-                while (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+                NonBlockingConsole.WriteLine("Press key to select logging type: f - log to file; c - log to console;");
+                char key = Console.ReadKey().KeyChar;
+                ConsoleVisibility = Constants.CONSOLE_DISPLAY;
+                if (key == 'F' || key == 'f')
                 {
-                    NonBlockingConsole.WriteLine(@"Provide correct directory to save the file to (example: C:\logs)");
-                    directory = Console.ReadLine();
+                    string directory = string.Empty;
+                    while (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+                    {
+                        NonBlockingConsole.WriteLine(@"Provide correct directory to save the file to (example: C:\logs)");
+                        directory = Console.ReadLine();
+                    }
+                    var fileName = string.Format("SalesIntegratorLog_{0}.txt", DateTime.Now.ToString("ddMMyyyy_hhmm"));
+                    string fileFullPath = Path.Combine(directory, fileName);
+                    FileStream = new FileStream(fileFullPath, FileMode.Create);
+                    StreamWriter = new StreamWriter(FileStream) { AutoFlush = true };
+                    Console.SetOut(StreamWriter);
+                    Console.SetError(StreamWriter);
+                    var handle = GetConsoleWindow();
+                    ConsoleVisibility = Constants.CONSOLE_HIDDEN;
+                    ShowWindow(handle, ConsoleVisibility);
+                    break;
                 }
-                var fileName = string.Format("SalesIntegratorLog_{0}.txt", DateTime.Now.ToString("ddMMyyyy_hhmm"));
-                string fileFullPath = Path.Combine(directory, fileName);
-                FileStream = new FileStream(fileFullPath, FileMode.Create);
-                StreamWriter = new StreamWriter(FileStream) { AutoFlush = true };
-                Console.SetOut(StreamWriter);
-                Console.SetError(StreamWriter);
-                var handle = GetConsoleWindow();
-                ConsoleVisibility = Constants.CONSOLE_HIDDEN;
-                ShowWindow(handle, ConsoleVisibility);
+                else if (key == 'C' || key == 'c') break;
             }
         }
         static void DisposeConsole()
@@ -71,13 +77,12 @@ namespace SalesIntegrator
         static void Main()
         {
             StartConsole();
-            _serviceProvider.GetService<Program>().Initialize();
+            ServiceProvider.GetService<Program>().Initialize();
             DisposeConsole();
-            
         }
 
 
-        private static readonly ServiceProvider _serviceProvider =
+        private static readonly ServiceProvider ServiceProvider =
             new ServiceCollection()
             .AddSingleton<IAPIService, BaselinkerService>()
             .AddSingleton<IController, Controller.Controller>()
@@ -96,10 +101,6 @@ namespace SalesIntegrator
             _controller.Initialize();
             _controller.Authorize();
             _controller.RegisterOrders();
-        }
-        public IController GetController()
-        {
-            return _controller;
         }
 
     }
