@@ -8,75 +8,75 @@ using Convert = SalesIntegrator.Utils.Convert;
 
 using System.Reflection;
 using SalesIntegrator.Service.Interface;
+using SalesIntegrator.Mapper.Interface;
+using System.Linq;
+using SalesIntegrator.Mapper;
+using SalesIntegrator.Dto.Baselinker;
+using SalesIntgrator.Dto.Subiekt;
+using SalesIntegrator.Dto.Subiekt;
+using SalesIntegrator.DTOs.Subiekt;
+using SalesIntegrator.Model.Interface;
 
 namespace SalesIntegrator.Service
 {
-    public class SubiektService : ISubiektService
+    public class SubiektService : IERPService, IStartable, IClosable
     {
         private Subiekt _subiekt;
         private IDictionary<string, Type> _subiektTypes;
         private readonly IDatabaseService _dbService;
+        private readonly IMapper _subiektMapper;
 
-        public SubiektService(IDatabaseService dbService)
+        public SubiektService(IDatabaseService dbService, IEnumerable<IMapper> mappers)
         {
             _subiektTypes = Constants.GetSubiektTypes();
             _dbService = dbService;
+            _subiektMapper = mappers.First(m => m is SubiektMapper);
 
         }
 
         
 
-        public void CloseSubiekt()
+        public void Close()
         {
             if (_subiekt.Aplikacja.Zakoncz()) NonBlockingConsole.WriteLine($"Subiekt closed successfully");
         }
 
-        public void EnterData(Order order)
-        {
-            var kontrahent = DodajKontrahenta(order);
-            DodajZamowienie(order, kontrahent);
-        }
 
-        public SuDokument DodajZamowienie(Order order, KontrahentJednorazowy kontrahent)
+        private SuDokument DodajZamowienie(SuDokumentDto dto, KontrahentJednorazowy kontrahent)
         {
             SuDokument doc = _subiekt.SuDokumentyManager.DodajZK();
             string type = "SuDokument";
             COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "KontrahentId", kontrahent.Identyfikator);
-            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "LiczonyOdCenBrutto", true);
-
+            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "LiczonyOdCenBrutto", dto.LiczonyOdCenBrutto);
+            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "Wystawil", _subiekt.OperatorNazwa);
+            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "Uwagi", dto.Uwagi);
+            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "Tytul", "Zamowienie od klienta");
+            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "DataWystawienia", dto.DataWystawienia.ToString("dd/MM/yyyy"));
+            var waluta = _dbService.GetAttributeId(dto.WalutaSymbol, "wl_Symbol", "sl_Waluta", "wl_Id");
+            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "WalutaSymbol", waluta);
+            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "NumerOryginalny", dto.NumerOryginalny);
             SuPozycje pozycje = doc.Pozycje;
-            foreach (var prod in order.products)
+            foreach (var prod in dto.Pozycje.Elements.Cast<SuPozycjaDto>())
             {
                 string pozycjaType = "SuPozycja";
+                int vatId = _dbService.GetAttributeId($"{prod.VatProcent}", "vat_Stawka", "sl_StawkaVAT", "vat_Id");
                 SuPozycja usluga = pozycje.DodajUslugeJednorazowa();
-                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "IloscJm", (float)prod.quantity);
-                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "UslJednNazwa", prod.name);
-
-                int vatId = _dbService.GetAttributeId($"{prod.tax_rate}", "vat_Stawka", "sl_StawkaVAT", "vat_Id");
+                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "IloscJm", (float)prod.IloscJm);
+                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "UslJednNazwa", prod.UslJednNazwa);
                 COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "VatId", vatId);
-                var nettoPrice = Convert.GetNettoPrice(prod.price_brutto, prod.tax_rate);
-                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "CenaNettoPrzedRabatem", nettoPrice);
-                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "CenaNettoPoRabacie", nettoPrice);
-                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "CenaBruttoPrzedRabatem", nettoPrice);
-                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "CenaBruttoPoRabacie", nettoPrice);
-                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "WartoscBruttoPrzedRabatem", prod.price_brutto * (float)prod.quantity);
-                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "WartoscBruttoPoRabacie", prod.price_brutto * (float)prod.quantity);
-                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "WartoscNettoPrzedRabatem", nettoPrice * (float)prod.quantity);
-                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "WartoscNettoPoRabacie", nettoPrice * (float)prod.quantity);
-                var vatValue = Convert.GetVATPrice(nettoPrice * (float)prod.quantity, prod.tax_rate);
-                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "Jm", prod.sku);
+                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "CenaNettoPrzedRabatem", prod.CenaNettoPrzedRabatem);
+                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "CenaNettoPoRabacie", prod.CenaNettoPoRabacie);
+                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "CenaBruttoPrzedRabatem", prod.CenaBruttoPrzedRabatem);
+                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "CenaBruttoPoRabacie", prod.CenaBruttoPoRabacie);
+                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "WartoscBruttoPrzedRabatem", prod.WartoscBruttoPrzedRabatem);
+                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "WartoscBruttoPoRabacie", prod.WartoscBruttoPoRabacie);
+                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "WartoscNettoPrzedRabatem", prod.WartoscNettoPrzedRabatem);
+                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "WartoscNettoPoRabacie", prod.WartoscNettoPoRabacie);
+                COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "Jm",prod.Jm);
                 COMHelper.SetPropertyValue<SuPozycja>(usluga, _subiektTypes[pozycjaType], "RabatProcent", 0);
-                NonBlockingConsole.WriteLine($"Added product {prod.name}");
+                NonBlockingConsole.WriteLine($"Added product {prod.TowarNazwa}");
             }
-            var wystawil = _subiekt.OperatorNazwa;
-            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "Wystawil", wystawil);
-            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "Uwagi", order.user_comments);
-            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "Tytul", "Zamowienie od klienta");
-            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "DataWystawienia", DateTime.Now.ToString("dd/MM/yyyy"));
-            var waluta = _dbService.GetAttributeId(order.currency, "wl_Symbol", "sl_Waluta", "wl_Id");
-            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "WalutaSymbol", waluta);
-            COMHelper.SetPropertyValue<SuDokument>(doc, _subiektTypes[type], "NumerOryginalny", order.external_order_id);
-
+            
             doc.Zapisz();
             NonBlockingConsole.WriteLine($"Saved order for client {kontrahent.Identyfikator}");
             return doc;
@@ -86,43 +86,31 @@ namespace SalesIntegrator.Service
         /// </summary>
         /// <param name="order">Zamowienie z baselinkera</param>
         /// <returns>Utworzony kontrahent</returns>
-        public KontrahentJednorazowy DodajKontrahenta(Order order)
+        private KontrahentJednorazowy DodajKontrahenta(KontrahentJednorazowyDto dto)
         {
+            //var orderDto = _subiektMapper.
             KontrahentJednorazowy kontrJedn = _subiekt.KontrahenciManager.DodajKontrahentaJednorazowego();
             string type = "KontrahentJednorazowy";
-
-            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "NazwaPelna", $"{order.invoice_fullname}\n{order.invoice_company}");
-            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "Nazwa", order.user_login);
-            kontrJedn.Telefony.Dodaj(order.phone);
-            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "Email", order.email);
-            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "NIP", order.invoice_nip);
-            if (!string.IsNullOrWhiteSpace(order.invoice_address))
-            {
-                COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "Ulica", RegexHelper.GetStreetName(order.invoice_address));
-                COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "NrDomu", RegexHelper.GetBuildingNumber(order.invoice_address));
-                COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "NrLokalu", RegexHelper.GetApartmentNumber(order.invoice_address));
-                COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "KodPocztowy", order.invoice_postcode);
-                COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "Miejscowosc", order.invoice_city);
-                int id = _dbService.GetAttributeId(order.invoice_country, "pa_Nazwa", "sl_Panstwo", "pa_Id");
-                COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "Panstwo", id);
-
-            }
-            else
-            {
-                COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "Ulica", RegexHelper.GetStreetName(order.delivery_address));
-                COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "NrDomu", RegexHelper.GetBuildingNumber(order.delivery_address));
-                COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "NrLokalu", RegexHelper.GetApartmentNumber(order.delivery_address));
-                COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "KodPocztowy", order.delivery_postcode);
-                COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "Miejscowosc", order.delivery_city);
-                int id = _dbService.GetAttributeId(order.delivery_country, "pa_Nazwa", "sl_Panstwo", "pa_Id");
-                COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "Panstwo", id);
-            }
+            
+            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "NazwaPelna", dto.NazwaPelna);
+            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "Nazwa", dto.Nazwa);
+            var phoneEnum = dto.Telefony.Elements.Cast<KhTelefonDto>().GetEnumerator(); 
+            while(phoneEnum.MoveNext()) kontrJedn.Telefony.Dodaj(phoneEnum.Current.Numer);
+            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "Email", dto.Email);
+            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "NIP", dto.NIP);
+            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "Ulica", dto.Ulica);
+            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "NrDomu", dto.NrDomu);
+            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "NrLokalu", dto.NrLokalu);
+            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "KodPocztowy", dto.KodPocztowy);
+            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "Miejscowosc", dto.Miejscowosc);
+            int countryId = _dbService.GetAttributeId(dto.Panstwo, "pa_Nazwa", "sl_Panstwo", "pa_Id");
+            COMHelper.SetPropertyValue<KontrahentJednorazowy>(kontrJedn, _subiektTypes[type], "Panstwo", countryId);
             kontrJedn.Zapisz();
             NonBlockingConsole.WriteLine($"Saved client {kontrJedn.Identyfikator}");
 
             return kontrJedn;
         }
-        public void StartSubiekt(DBConnectionModel dbUser, InsertUserModel insertUser)
+        public void Start(IDBConnectionModel dbUser, ILoginModel erpLogin)
         {
             GT gt = new GT()
             {
@@ -132,8 +120,8 @@ namespace SalesIntegrator.Service
                 Autentykacja = AutentykacjaEnum.gtaAutentykacjaMieszana,
                 Uzytkownik = dbUser.Username,
                 UzytkownikHaslo = dbUser.Password,
-                Operator = insertUser.Username,
-                OperatorHaslo = insertUser.Password
+                Operator = erpLogin.Username,
+                OperatorHaslo = erpLogin.Password
             };
 
             _subiekt = (Subiekt)gt.Uruchom(
@@ -141,17 +129,19 @@ namespace SalesIntegrator.Service
                 (Int32)UruchomEnum.gtaUruchomNieArchiwizujPrzyZamykaniu);
             _subiekt.Okno.Widoczne = true;
             _dbService.Initialize(_subiekt);
-
+            NonBlockingConsole.WriteLine("Subiekt GT properly started");
         }
 
-        public void ProcessOrders(IEnumerable<Order> orders)
+        public void RegisterOrders(IEnumerable<IModel> orders)
         {
             foreach(var order in orders)
             {
-                EnterData(order);
-                NonBlockingConsole.WriteLine($"Order {order.order_id} registered successfully.");
+                var dto = _subiektMapper.MapToDto(order) as SuDokumentDto;
+                var kontrahent = DodajKontrahenta(dto.Kontrahent);
+                DodajZamowienie(dto, kontrahent);
+                NonBlockingConsole.WriteLine($"Order {dto.Numer} registered successfully.");
             }
+            NonBlockingConsole.WriteLine("JOB FINISHED :)");
         }
-
     }
 }

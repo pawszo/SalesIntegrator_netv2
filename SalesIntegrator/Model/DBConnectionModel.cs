@@ -1,28 +1,32 @@
-﻿namespace SalesIntegrator.Model
+﻿using SalesIntegrator.Dto.Interfaces;
+using SalesIntegrator.Model.Interface;
+using System.Collections.Generic;
+
+namespace SalesIntegrator.Model
 {
-    public class DBConnectionModel
+    public class DBConnectionModel : IDBConnectionModel
     {
-        public string ServerName { get; private set; }
-        public string DatabaseName { get; private set; }
-        public string Username { get; private set; }
-        public string Password { get; private set; }
+        public string ServerName { get; set; }
+        public string DatabaseName { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
 
 
 
-        public void SetFields(string serverName, string dbName, string username, string password)
+        public void SetFields(IDictionary<string, string> fields)
         {
-            ServerName = serverName;
-            DatabaseName = dbName;
-            Username = username;
-            Password = password;
+            ServerName = fields["serverName"];
+            DatabaseName = fields["dbName"];
+            Username = fields["username"];
+            Password = fields["password"];
         }
-        public void SetFields(DBConnectionModel model)
+        public void SetFields(IModel model)
         {
-            ServerName = model.ServerName;
-            DatabaseName = model.DatabaseName;
-            Username = model.Username;
-            Password = model.Password;
+            var dbModel = model as IDBConnectionModel;
+            ServerName = dbModel.ServerName;
+            DatabaseName = dbModel.DatabaseName;
+            Username = dbModel.Username;
+            Password = dbModel.Password;
         }
-
     }
 }

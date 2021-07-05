@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SalesIntegrator.Utils;
 
 namespace SalesIntegrator.Mapper
 {
@@ -45,10 +46,7 @@ namespace SalesIntegrator.Mapper
                 DoDokumentuDataWystawienia = Convert.UnixTimeStampToDate(model.date_confirmed).Date,
                 DoDokumentuId = model.order_id,
                 DoDokumentuNumerPelny = model.order_id,
-                Kontrahent = new KontrahentJednorazowyDto
-                {
-                    
-                },
+                Kontrahent = MapToKontrahentJednorazowyDto(model),
                 KwotaDoZaplaty = model.products.Select(p => p.price_brutto*p.quantity).Sum(),
                 LiczonyOdCenBrutto = true,
                 Pozycje = new SuPozycjeDto
@@ -57,7 +55,9 @@ namespace SalesIntegrator.Mapper
                     Liczba = model.products.Count()
                 },
                 Tytul = string.Concat("OrderNo_", model.shop_order_id, " ", model.user_login),
-                WalutaSymbol = model.currency
+                WalutaSymbol = model.currency,
+                Uwagi = model.user_comments,
+                NumerOryginalny = model.external_order_id               
             };
         private AplikacjaDto MapToAplikacjaDto(Order model) =>
             new AplikacjaDto
@@ -69,11 +69,43 @@ namespace SalesIntegrator.Mapper
             {
                 //todo
             };
-        private KontrahentJednorazowyDto MapToKontrahentJednorazowyDto(Order model) =>
-            new KontrahentJednorazowyDto
+        private KontrahentJednorazowyDto MapToKontrahentJednorazowyDto(Order model)
+        {
+
+            string ulica, nrDomu, nrLokalu, kodPocztowy, miejscowosc, panstwo;
+            if (!string.IsNullOrWhiteSpace(model.invoice_address))
             {
-                //todo
+                ulica = RegexHelper.GetStreetName(model.invoice_address);
+                nrDomu = RegexHelper.GetBuildingNumber(model.invoice_address);
+                nrLokalu = RegexHelper.GetApartmentNumber(model.invoice_address);
+                kodPocztowy = model.invoice_postcode;
+                miejscowosc = model.invoice_city;
+                panstwo = model.invoice_country;
+            }
+            else
+            {
+                ulica = RegexHelper.GetStreetName(model.delivery_address);
+                nrDomu = RegexHelper.GetBuildingNumber(model.delivery_address);
+                nrLokalu = RegexHelper.GetApartmentNumber(model.delivery_address);
+                kodPocztowy = model.delivery_postcode;
+                miejscowosc = model.delivery_city;
+                panstwo = model.delivery_country;
+            }
+            return new KontrahentJednorazowyDto
+            {
+                NazwaPelna = $"{model.invoice_fullname}\n{model.invoice_company}",
+                Nazwa = model.user_login,
+                Email = model.email,
+                NIP = model.invoice_nip,
+                Ulica = ulica,
+                NrDomu = nrDomu,
+                NrLokalu = nrLokalu,
+                KodPocztowy = kodPocztowy,
+                Miejscowosc = miejscowosc,
+                Panstwo = panstwo,
+                Telefony = MapToKhTelefonyDto(model) 
             };
+        }
         private PrzedplatyDto MapToPrzedplatyDto(Order model) =>
             new PrzedplatyDto
             {
@@ -96,6 +128,7 @@ namespace SalesIntegrator.Mapper
                 TowarOpis = model.ean,
                 IloscJm = model.quantity,
                 Jm = model.sku,
+                UslJednNazwa = model.name,
                 CenaBruttoPrzedRabatem = model.price_brutto,
                 CenaBruttoPoRabacie = model.price_brutto,
                 WartoscBruttoPrzedRabatem = model.price_brutto*model.quantity,
@@ -107,7 +140,8 @@ namespace SalesIntegrator.Mapper
                 WartoscVatPoRabacie = Convert.GetVATPrice(Convert.GetNettoPrice(model.price_brutto, model.tax_rate), model.tax_rate),
                 VatProcent = model.tax_rate,
                 Opis = string.Concat(model.name, "\n", model.variant_id, "\n", model.ean),
-                UslugaJednorazowa = true, //MAY CHANGE
+                UslugaJednorazowa = true //MAY CHANGE
+                
             };
         private SuPozycjeFunduszePromocjiDto MapToSuPozycjeFunduszePromocjiDto(Order model) =>
             new SuPozycjeFunduszePromocjiDto
@@ -128,6 +162,16 @@ namespace SalesIntegrator.Mapper
             new WiadomoscDto
             {
                 //todo
+            };
+        private KhTelefonyDto MapToKhTelefonyDto(Order model) =>
+            new KhTelefonyDto
+            {
+                Liczba = 1,
+                Elements = new KhTelefonDto[] { new KhTelefonDto
+                {
+                    Numer = model.phone
+                }
+                }
             };
 
     }

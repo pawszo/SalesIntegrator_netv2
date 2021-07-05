@@ -112,6 +112,7 @@
     <Compile Include="Dto\Subiekt\AplikacjaDto.cs" />
     <Compile Include="Dto\Subiekt\GridEdycyjnyDto.cs" />
     <Compile Include="Dto\Subiekt\KhRachunkiDto.cs" />
+    <Compile Include="Dto\Subiekt\KhTelefonDto.cs" />
     <Compile Include="Dto\Subiekt\KhTelefonyDto.cs" />
     <Compile Include="Dto\Subiekt\KontrahentJednorazowyDto.cs" />
     <Compile Include="Controller\Interface\IController.cs" />
@@ -127,13 +128,15 @@
     <Compile Include="Dto\Subiekt\WiadomoscDto.cs" />
     <Compile Include="Mapper\BaselinkerMapper.cs" />
     <Compile Include="Mapper\Interface\IMapper.cs" />
-    <Compile Include="Mapper\IProductResultDto.cs" />
     <Compile Include="Mapper\SubiektMapper.cs" />
+    <Compile Include="Model\Interface\IDBConnectionModel.cs" />
     <Compile Include="Model\Interface\IModel.cs" />
+    <Compile Include="Model\Interface\ILoginModel.cs" />
     <Compile Include="Model\Order.cs" />
     <Compile Include="Model\OrderInput.cs" />
     <Compile Include="Model\OrderResult.cs" />
     <Compile Include="Model\Product.cs" />
+    <Compile Include="Service\Interface\IClosable.cs" />
     <Compile Include="Service\Interface\IDatabaseService.cs" />
     <Compile Include="Dto\Interface\IDto.cs" />
     <Compile Include="Dto\Interface\IOrderDto.cs" />
@@ -146,7 +149,8 @@
     <Compile Include="Service\DataService.cs" />
     <Compile Include="Service\BaselinkerService.cs" />
     <Compile Include="Service\Interface\IAPIService.cs" />
-    <Compile Include="Service\Interface\ISubiektService.cs" />
+    <Compile Include="Service\Interface\IERPService.cs" />
+    <Compile Include="Service\Interface\IStartable.cs" />
     <Compile Include="Service\SubiektService.cs" />
     <Compile Include="Utils\Constants.cs" />
     <Compile Include="Utils\Convert.cs" />

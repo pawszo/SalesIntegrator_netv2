@@ -16,8 +16,9 @@ namespace SalesIntegrator.Controller
     public sealed class Controller : IController
     {
 
-        private readonly IAPIService _baselinkerService;
+        private readonly IAPIService _apiService;
         private readonly IDataService _dataService;
+        private readonly IERPService _erpService;
 
         private delegate DialogResult SafeCallDelegate();
         public IEnumerable<Order> ReceivedOrders { get; set; }
@@ -27,22 +28,23 @@ namespace SalesIntegrator.Controller
 
 
 
-        public Controller(IDataService dataService, IAPIService baselinkerService)
+        public Controller(IDataService dataService, IAPIService apiService, IERPService erpService)
         {
             _dataService = dataService;
-            _baselinkerService = baselinkerService;
+            _apiService = apiService;
+            _erpService = erpService;
         }
 
         public async Task GetOrders(IOrderInputDto orderInput)
         {
-            var newOrders = await _baselinkerService.GetOrders(orderInput);
+            var newOrders = await _apiService.GetOrders(orderInput);
+            var orders = new List<Order>(_dataService.Orders);
             if (newOrders.Count() == 0)
             {
                 NonBlockingConsole.WriteLine("No orders founds. Review your input and try again");
             }
             else
             {
-                var orders = new List<Order>(_dataService.Orders);
                 orders.AddRange(newOrders.Cast<Order>().Where(p => !orders.Contains(p)));
 
 
@@ -51,9 +53,20 @@ namespace SalesIntegrator.Controller
                     NonBlockingConsole.WriteLine($"Downloaded new order: id {order.order_id}, user {order.user_login}");
                 }
             }
-            //ReceivedOrders = newOrders;
-            //return newOrders;
+            _dataService.Orders = orders;
+        }
+        public void RegisterOrders()
+        {
+            if (_erpService is IStartable)
+            {
+                (_erpService as IStartable).Start(_dataService.DBConnection, _dataService.ERPLogin);
+            }
+            _erpService.RegisterOrders(_dataService.Orders);
+            if (_erpService is IClosable)
+            {
+                (_erpService as IClosable).Close();
 
+            }
         }
 
 
@@ -68,6 +81,16 @@ namespace SalesIntegrator.Controller
                 (Window as Window).Invoke(d);
             }
             else Window.ShowDialog();
+        }
+        public void Authorize()
+        {
+            IDBConnectionModel dbUser = new DBConnectionModel();
+            ILoginModel erpUser = new InsertUserModel();
+            LoginForm loginForm = new LoginForm(dbUser, erpUser);
+            loginForm.ShowDialog();
+            _dataService.DBConnection = dbUser;
+            _dataService.ERPLogin = erpUser;
+
         }
 
         public IDataService GetDataService()

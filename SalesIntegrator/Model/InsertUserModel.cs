@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SalesIntegrator.Model.Interface;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,20 +7,21 @@ using System.Threading.Tasks;
 
 namespace SalesIntegrator.Model
 {
-    public class InsertUserModel
+    public class InsertUserModel : ILoginModel
     {
-        public string Username { get; private set; }
-        public string Password { get; private set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
 
-        public void SetFields(string username, string password)
+        public void SetFields(IDictionary<string, string> fields)
         {
-            Username = username;
-            Password = password;
+            Username = fields["username"];
+            Password = fields["password"];
         }
-        public void SetFields(InsertUserModel model)
+        public void SetFields(IModel model)
         {
-            Username = model.Username;
-            Password = model.Password;
+            var loginModel = model as ILoginModel;
+            Username = loginModel.Username;
+            Password = loginModel.Password;
         }
     }
 }

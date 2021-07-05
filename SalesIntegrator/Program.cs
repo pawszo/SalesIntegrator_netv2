@@ -10,19 +10,17 @@ using System.IO;
 using SalesIntegrator.Utils;
 using SalesIntegrator.Service.Interface;
 using System.Reflection;
+using SalesIntegrator.Mapper.Interface;
+using SalesIntegrator.Mapper;
 
 namespace SalesIntegrator
 {
     public class Program
     {
         private readonly IController _controller;
-        private readonly ISubiektService _subiektService;
-        private readonly IDataService _dataService;
 
         public static FileStream FileStream;
         public static StreamWriter StreamWriter;
-        public static DBConnectionModel DBUser;
-        public static InsertUserModel InsertUser;
 
         [DllImport("kernel32.dll")]
         static extern IntPtr GetConsoleWindow();
@@ -31,24 +29,9 @@ namespace SalesIntegrator
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
         static int ConsoleVisibility;
 
-        public Program(IController controller, ISubiektService subiektService, IDataService dataService)
+        public Program(IController controller)
         {
             _controller = controller;
-            _subiektService = subiektService;
-            _dataService = dataService;
-
-        }
-        private void HandleSubiekt(DBConnectionModel dbUser, InsertUserModel insertUser)
-        {
-            _subiektService.StartSubiekt(dbUser, insertUser);
-            NonBlockingConsole.WriteLine("Subiekt GT properly started");
-            _subiektService.ProcessOrders(_dataService.Orders);
-            NonBlockingConsole.WriteLine("JOB FINISHED :)");
-            if (ConsoleVisibility != Constants.CONSOLE_HIDDEN)
-            {
-                NonBlockingConsole.WriteLine("Press any key to close the application.");
-                Console.ReadKey();
-            }
         }
 
         static void StartConsole()
@@ -75,17 +58,22 @@ namespace SalesIntegrator
                 ShowWindow(handle, ConsoleVisibility);
             }
         }
+        static void DisposeConsole()
+        {
+            if (ConsoleVisibility != Constants.CONSOLE_HIDDEN)
+            {
+                NonBlockingConsole.WriteLine("Press any key to close the application.");
+                Console.ReadKey();
+            }
+        }
 
         [STAThread]
         static void Main()
         {
             StartConsole();
-            Program program = _serviceProvider.GetService<Program>().Initialize();
-            DBConnectionModel dbUser = new DBConnectionModel();
-            InsertUserModel insertUser = new InsertUserModel();
-            LoginForm loginForm = new LoginForm(dbUser, insertUser);
-            loginForm.ShowDialog();
-            program.HandleSubiekt(dbUser, insertUser);
+            _serviceProvider.GetService<Program>().Initialize();
+            DisposeConsole();
+            
         }
 
 
@@ -94,18 +82,20 @@ namespace SalesIntegrator
             .AddSingleton<IAPIService, BaselinkerService>()
             .AddSingleton<IController, Controller.Controller>()
             .AddSingleton<IDataService, DataService>()
-            .AddSingleton<ISubiektService, SubiektService>()
+            .AddSingleton<IERPService, SubiektService>()
             .AddSingleton<IDatabaseService, DatabaseService>()
+            .AddTransient<IMapper, BaselinkerMapper>()
+            .AddTransient<IMapper, SubiektMapper>()
             .AddTransient<Program>()
             .BuildServiceProvider();
 
 
         
-        public Program Initialize()
+        public void Initialize()
         {
             _controller.Initialize();
-            return this;
-
+            _controller.Authorize();
+            _controller.RegisterOrders();
         }
         public IController GetController()
         {

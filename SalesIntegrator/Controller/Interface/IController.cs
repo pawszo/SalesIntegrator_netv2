@@ -15,6 +15,8 @@ namespace SalesIntegrator.Controller.Interface
         void Initialize();
         IEnumerable<Order> ReceivedOrders { get; set; }
         IDataService GetDataService();
+        void RegisterOrders();
+        void Authorize();
 
 
     }

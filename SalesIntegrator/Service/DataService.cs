@@ -2,6 +2,7 @@
 using SalesIntegrator.Model;
 using System;
 using System.Collections.Generic;
+using SalesIntegrator.Model.Interface;
 
 namespace SalesIntegrator.Service
 {
@@ -10,8 +11,8 @@ namespace SalesIntegrator.Service
 
         public IEnumerable<Order> Orders { get; set; }
         public string Token { get; set; }
-        public DBConnectionModel DBConnect { get; set; }
-        public InsertUserModel InsertUser { get; set; }
+        public IDBConnectionModel DBConnection { get; set; }
+        public ILoginModel ERPLogin { get; set; }
 
 
 

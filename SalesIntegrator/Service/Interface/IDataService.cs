@@ -1,4 +1,5 @@
 ﻿using SalesIntegrator.Model;
+using SalesIntegrator.Model.Interface;
 using SalesIntegrator.Utils;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace SalesIntegrator.Service.Interface
     {
         IEnumerable<Order> Orders { get; set; }
         string Token { get; set; }
-        DBConnectionModel DBConnect { get; set; }
-        InsertUserModel InsertUser { get; set; }
+        IDBConnectionModel DBConnection { get; set; }
+        ILoginModel ERPLogin { get; set; }
     }
 }
