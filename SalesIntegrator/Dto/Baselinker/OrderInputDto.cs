@@ -1,9 +1,10 @@
 ﻿using SalesIntegrator.Dto.Interface;
-using SalesIntegrator.Dto.Interfaces;
+using Newtonsoft.Json;
 using System;
 
 namespace SalesIntegrator.Dto.Baselinker
 {
+    [JsonObject(Title = "OrderInput")]
     public class OrderInputDto : IOrderInputDto
     {
         public Nullable<int> Order_id { get; set; }

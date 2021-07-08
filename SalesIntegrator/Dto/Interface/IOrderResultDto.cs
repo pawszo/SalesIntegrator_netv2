@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace SalesIntegrator.Dto.Interface
 {
+    
     public interface IOrderResultDto : IDto
     {
         string status { get; set; }

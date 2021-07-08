@@ -61,7 +61,11 @@ namespace SalesIntegrator
                     ShowWindow(handle, ConsoleVisibility);
                     break;
                 }
-                else if (key == 'C' || key == 'c') break;
+                else if (key == 'C' || key == 'c')
+                {
+                    NonBlockingConsole.WriteLine("Console logging enabled.");
+                    break;
+                }
             }
         }
         static void DisposeConsole()

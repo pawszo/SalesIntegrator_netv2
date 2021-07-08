@@ -41,6 +41,7 @@ namespace SalesIntegrator.Service
             var result = JsonSerializer.Deserialize<OrderResultDto>(response.Content);
 
             var orders = result?.orders?.AsEnumerable<IOrderDto>();
+            //orders = result?.
 
             return orders.Select(p => _baselinkerMapper.MapToModel(p));
 
